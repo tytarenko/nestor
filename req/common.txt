@@ -1,5 +1,7 @@
 Django==1.10.5
 django-extensions==1.7.5
+django-registration==2.2
+django-social-auth==0.7.28
 djangorestframework==3.5.3
 six==1.10.0
 sqlparse==0.2.2
