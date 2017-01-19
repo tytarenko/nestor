@@ -8,7 +8,7 @@ makemigrations:
 	python manage.py makemigrations
 
 makesuperuser:
-	python manage.py createsuperuser
+	python manage.py createsuperuser --username tytar --email tytarenko.sergey@gmail.com
 
 clean:
 	find . -name "*.pyc" -exec rm -rf {} \;
