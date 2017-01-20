@@ -1,0 +1,12 @@
+{% extends 'base/layouts/main.html' %}
+
+
+{% block content %}
+
+{% include 'base/snippets/user_profile_head.html' with active_page='publications_bookmarks' %}
+
+{% include 'base/snippets/user_profile_bookmarks_header.html' with active_page='comments_bookmarks' %}
+
+{% include 'base/snippets/comments.html' with comments=comments_bookmarks %}
+
+{% endblock %}

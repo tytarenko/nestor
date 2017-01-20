@@ -1,0 +1,5 @@
+{% for comment in comments %}
+    {% include 'base/snippets/comment.html' %}
+{% endfor %}
+
+{% include 'base/navigation/page_navigation.html' with pages=comments %}

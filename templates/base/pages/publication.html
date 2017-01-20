@@ -1,0 +1,41 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block content %}
+    <h1>{{ publication.title }}</h1>
+    {% include 'base/snippets/publication_categories.html' with categories=publication.categories.all %}
+    <p>{{ publication.fulltext }}</p>
+    <p>
+        <a href="{% url 'user_profile' username=publication.author.username %}">{{ publication.author.userprofile.full_name }}</a>
+        <a href="{% url 'publication' pk=publication.id %}#comments">Comments({{ publication.comments.count }})</a>
+        <span class="label label-{% if publication.rating > 0 %}success{% elif publication.rating == 0 %}default{% else %}danger{% endif %} pull-right">{{ publication.rating }}</span>
+    </p>
+    <div id="comments">
+        <div>
+
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Comments ({{ publication.comments.count }})</a></li>
+            <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Top comment</a></li>
+          </ul>
+
+         <!-- Tab panes -->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="home">
+                <br>
+                {% for comment in comments %}
+                    {% include 'base/snippets/publication_comment.html' %}
+                {% endfor %}
+            </div>
+            <div role="tabpanel" class="tab-pane" id="profile">
+                <br>
+                {% for comment in best_comments %}
+                    {% include 'base/snippets/publication_comment.html' %}
+                {% endfor %}
+            </div>
+          </div>
+        </div>
+
+
+
+    </div>
+{% endblock %}

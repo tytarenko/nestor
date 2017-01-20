@@ -1,0 +1,6 @@
+<br>
+<ul class="nav nav-pills">
+  <li role="presentation" {% if active_page == 'publications_bookmarks' %}class="active"{% endif %}><a href="{% url 'user_publications_bookmarks' username=user.username %}">Publications</a></li>
+  <li role="presentation" {% if active_page == 'comments_bookmarks' %}class="active"{% endif %}><a href="{% url 'user_comments_bookmarks' username=user.username %}">Comments</a></li>
+</ul>
+<br>

@@ -1,0 +1,10 @@
+{% extends 'base/layouts/main.html' %}
+
+
+{% block content %}
+
+{% include 'base/snippets/user_profile_head.html' with active_page='follows' %}
+
+{% include 'base/snippets/users_list.html' with users=follows %}
+
+{% endblock %}

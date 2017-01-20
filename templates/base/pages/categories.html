@@ -1,0 +1,14 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block content %}
+
+<ul class="list-unstyled">
+{% for category in categories %}
+    <li>
+        <h3><a href="{% url 'categories' slug=category.slug %}">{{ category.title }}</a></h3>
+        <p>Count publications: {{ category.publications.count }}</p>
+    </li>
+{% endfor %}
+</ul>
+
+{% endblock %}

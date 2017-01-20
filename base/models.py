@@ -1,5 +1,74 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.core.mail import send_mail
+from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.validators import UnicodeUsernameValidator
+
+from .managers import UserManager
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    username_validator = UnicodeUsernameValidator()
+
+    username = models.CharField(
+        _('username'),
+        max_length=150,
+        unique=True,
+        help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+        validators=[username_validator],
+        error_messages={
+            'unique': _("A user with that username already exists."),
+        },
+    )
+    first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    email = models.EmailField(_('email address'), blank=True)
+    is_staff = models.BooleanField(
+        _('staff status'),
+        default=False,
+        help_text=_('Designates whether the user can log into this admin site.'),
+    )
+    is_active = models.BooleanField(
+        _('active'),
+        default=True,
+        help_text=_(
+            'Designates whether this user should be treated as active. '
+            'Unselect this instead of deleting accounts.'
+        ),
+    )
+    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    full_name = models.CharField(_('full name'), max_length=255)
+    avatar = models.ImageField(default=None, null=True)
+    follower = models.ManyToManyField(
+        'self',
+        symmetrical=False,
+        related_name='follows',
+    )
+    publication_bookmark = models.ManyToManyField(
+        'Publication',
+    )
+    comment_bookmark = models.ManyToManyField(
+        'Comment',
+    )
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
+
+    def get_full_name(self):
+        return self.full_name.strip()
+
+    def get_short_name(self):
+        return self.full_name
+
+    def email_user(self, subject, message, from_email=None, **kwargs):
+        """
+        Sends an email to this User.
+        """
+        send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
 class TimeStampedModel(models.Model):
@@ -42,6 +111,10 @@ class Organisation(TimeStampedModel, TitleSlugDescriptionModel):
         User,
         related_name='organisations',
     )
+    subscriber = models.ManyToManyField(
+        User,
+        related_name='subscribes_organisations',
+    )
     parent = models.ForeignKey(
         "self",
         related_name="children",
@@ -52,8 +125,6 @@ class Organisation(TimeStampedModel, TitleSlugDescriptionModel):
 
 
 class UserProfile(TimeStampedModel):
-    full_name = models.CharField(max_length=255)
-    avatar = models.ImageField(default=None, null=True)
     background_image = models.ImageField(default=None, null=True)
     bio = models.TextField()
     user = models.OneToOneField(
@@ -152,23 +223,3 @@ class UserVoice(TimeStampedModel):
 
     class Meta:
         unique_together = (('user', 'voter'),)
-
-
-# class PublicationBookmark(TimeStampedModel):
-#     user = models.ForeignKey(User, related_name="publications_bookmarks")
-#     publication = models.ForeignKey(Publication, related_name="publications_bookmarks")
-#
-#
-# class CommentBookmark(TimeStampedModel):
-#     user = models.ForeignKey(User, related_name="comments_bookmarks")
-#     comment = models.ForeignKey(Comment, related_name="comments_bookmarks")
-#
-#
-# class Follower(TimeStampedModel):
-#     user = models.ForeignKey(User, related_name="follows")
-#     follower = models.ForeignKey(User, related_name="followers")
-#
-#
-# class Subscriber(TimeStampedModel):
-#     organisation = models.ForeignKey(Organisation, related_name="subscribers")
-#     subscriber = models.ForeignKey(User, related_name="subscribers")

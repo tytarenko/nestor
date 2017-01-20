@@ -1,0 +1,26 @@
+<h1>{{ user.full_name }} <sup>{{ user.groups.all.first }}</sup>
+    <span class="label label-{% if user.userprofile.authority > 0 %}success{% elif user.userprofile.authority == 0 %}default{% else %}danger{% endif %} pull-right">{{ user.userprofile.authority }}</span>
+    <span class="label label-{% if user.userprofile.rating > 0 %}success{% elif user.userprofile.rating == 0 %}default{% else %}danger{% endif %} pull-right">{{ user.userprofile.rating|floatformat:1 }}</span>
+</h1>
+
+
+<ul class="nav nav-tabs">
+  <li role="presentation" {% if active_page == 'publications' %}class="active"{% endif %} >
+      <a href="{% url 'user_publications' username=user.username %}">publications ({{ user.publications.count }})</a>
+  </li>
+  <li role="presentation" {% if active_page == 'comments' %}class="active"{% endif %}>
+      <a href="{% url 'user_comments' username=user.username %}">comments ({{ user.comments.count }})</a>
+  </li>
+  <li role="presentation" {% if active_page == 'publications_bookmarks' %}class="active"{% endif %}>
+      <a href="{% url 'user_publications_bookmarks' username=user.username %}">bookmarks</a>
+  </li>
+
+  <li role="presentation" {% if active_page == 'follows' %}class="active"{% endif %}>
+      <a href="{% url 'user_follows' username=user.username %}">follows ({{ user.follows.count }})</a>
+  </li>
+
+  <li role="presentation" {% if active_page == 'followers' %}class="active"{% endif %}>
+      <a href="{% url 'user_followers' username=user.username %}">followers ({{ user.follower.count }})</a>
+  </li>
+
+</ul>

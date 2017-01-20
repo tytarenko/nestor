@@ -1,0 +1,5 @@
+{% for user in users %}
+    <h4>
+        <a href="{% url 'user_profile' username=user.username%}">{{ user.full_name }} ({{ user.groups.all.first }})</a>
+    </h4>
+{% endfor %}

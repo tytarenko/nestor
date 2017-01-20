@@ -7,7 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 import elizabeth
 
-from base.models import (OrganisationType, Organisation, UserProfile, Category, Tag,
+from base.models import (User, OrganisationType, Organisation, UserProfile, Category, Tag,
                          PublicationType, Blog, Publication, Comment, PublicationVoice,
                          CommentVoice, UserVoice)
 
@@ -16,9 +16,10 @@ class Command(BaseCommand):
 
     roles = (
         ('reader', 1),
-        ('author', 5),
-        ('moderator', 5),
-        ('admin', 3),
+        ('author', 7),
+        ('journalist', 3),
+        ('moderator', 2),
+        ('admin', 1),
     )
 
     count_categories = (3, 5,)
@@ -31,6 +32,31 @@ class Command(BaseCommand):
     count_organisation_type = 3
     organisations = 5
     count_publications_per_organisation = (1, 3, )
+    count_bookmarks_publications = (2, 5)
+    count_bookmarks_comments = (1, 3)
+    count_followers = (1, 3)
+
+    # roles = (
+    #     ('reader', 10),
+    #     ('author', 20),
+    #     ('journalist', 10),
+    #     ('moderator', 5),
+    #     ('admin', 3),
+    # )
+    #
+    # count_categories = (5, 10,)
+    # count_tags = (15, 25,)
+    # count_publications = (3, 5, )
+    # count_comments = (5, 10, )
+    # count_voices_publication = (0, 7, )
+    # count_voices_comment = (0, 7, )
+    # count_voices_users = (0, 7, )
+    # count_organisation_type = 2
+    # organisations = 5
+    # count_publications_per_organisation = (0, 5, )
+    # count_bookmarks_publications = (0, 5)
+    # count_bookmarks_comments = (0, 5)
+    # count_followers = (0, 5)
 
     def handle(self, *args, **options):
         self.print_success('Start generate data')
@@ -49,6 +75,10 @@ class Command(BaseCommand):
         self.generate_organisations()
         self.generate_blogs()
         self.generate_blog_publications()
+        self.generate_bookmarks_publications()
+        self.generate_bookmarks_comments()
+        self.generate_followers()
+        self.generate_subscribers()
 
         self.print_success('Finished generated all data')
 
@@ -111,14 +141,14 @@ class Command(BaseCommand):
                 user = User.objects.create_user(
                     username=person.username(gender),
                     email=person.email(gender),
-                    password='1234567890qwerty'
+                    password='1234567890qwerty',
+                    full_name=person.full_name(gender),
+                )
+                UserProfile.objects.create(
+                    user=user
                 )
                 group = groups.get(name=role)
                 user.groups.add(group)
-                UserProfile.objects.create(
-                    full_name=person.full_name(gender),
-                    user=user
-                )
                 if count % 100 == 0 and count > 0:
                     self.print_success('Generated {} users'.format(count))
                 count += 1
@@ -272,11 +302,11 @@ class Command(BaseCommand):
                         comment=comment,
                         voice=random.choice([-1, 1])
                     )
+                    if count % 50 == 0 and count > 0:
+                        self.print_success('Generated {} comment\'s voices'.format(count))
+                    count += 1
                 except IntegrityError:
                     pass
-                if count % 50 == 0 and count > 0:
-                    self.print_success('Generated {} comment\'s voices'.format(count))
-                count += 1
         self.print_success('Successfully generate {} comment\'s voices'.format(count))
         self.print_notice('Start recalculate comment\'s voices')
         comments = Comment.objects.all()
@@ -390,3 +420,53 @@ class Command(BaseCommand):
             if count % 50 == 0 and count > 0:
                 self.print_success('Generated {} blog\'s publications'.format(count))
         self.print_success('Successfully generate {} blogs publications'.format(count))
+
+    def generate_bookmarks_publications(self):
+        self.print_notice('Start generate bookmarks publications')
+        authors = self.get_authors()
+        count = 0
+        for author in authors:
+            publications = Publication.objects.exclude(author=author)
+            pubs = [random.choice(publications) for _ in range(random.randint(*self.count_bookmarks_publications))]
+            author.publication_bookmark.add(*pubs)
+            if count % 50 == 0 and count > 0:
+                self.print_success('Generated {} bookmarks publications'.format(count))
+            count += 1
+        self.print_success('Successfully generate {} bookmarks publications'.format(count))
+
+    def generate_bookmarks_comments(self):
+        self.print_notice('Start generate bookmarks comments')
+        authors = self.get_authors()
+        count = 0
+        for author in authors:
+            comments = Comment.objects.exclude(author=author)
+            cmms = [random.choice(comments) for _ in range(random.randint(*self.count_bookmarks_comments))]
+            author.comment_bookmark.add(*cmms)
+            if count % 50 == 0 and count > 0:
+                self.print_success('Generated {} bookmarks comments'.format(count))
+            count += 1
+        self.print_success('Successfully generate {} bookmarks comments'.format(count))
+
+    def generate_followers(self):
+        self.print_notice('Start generate followers')
+        authors = self.get_authors()
+        count = 0
+        for count, author in enumerate(authors, 1):
+            users = User.objects.exclude(id=author.id)
+            followers = [random.choice(users) for _ in range(random.randint(*self.count_followers))]
+            author.follower.add(*followers)
+            if count % 50 == 0 and count > 0:
+                self.print_success('Generated {} followers'.format(count))
+        self.print_success('Successfully generate {} followers'.format(count))
+
+    def generate_subscribers(self):
+        self.print_notice('Start generate subscribers')
+        organisations = self.get_organisations()
+        count = 0
+        for count, organisation in enumerate(organisations, 1):
+            users = User.objects.all()
+            subscribers = [random.choice(users) for _ in range(random.randint(*self.count_followers))]
+            organisation.subscriber.add(*subscribers)
+            if count % 50 == 0 and count > 0:
+                self.print_success('Generated {} subscribers'.format(count))
+        self.print_success('Successfully generate {} subscribers'.format(count))

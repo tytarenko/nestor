@@ -18,3 +18,6 @@ shell:
 
 dumpfixtuser:
 	python manage.py dumpdata --format=json base > base/fixtures/initial_data.json
+
+resetdb:
+	python manage.py reset_db && python manage.py migrate && python manage.py filldata

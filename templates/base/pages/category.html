@@ -1,0 +1,10 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block content %}
+
+<h1>{{ category.title }}</h1>
+<p>{{ category.description }}</p>
+
+{% include 'base/snippets/publications.html' with publications=publications %}
+
+{% endblock %}
