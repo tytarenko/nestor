@@ -38,10 +38,10 @@ def recalc_users_rating():
 def get_best_comments(comments):
     comment = comments.latest('rating')
     while True:
-        parent_id = comment.parent_id
-        if parent_id:
+        parent = comment.parent_id
+        if parent:
             for c in comments:
-                if c.id == parent_id:
+                if c.id == parent:
                     comment = c
         else:
             break

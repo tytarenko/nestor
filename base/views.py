@@ -1,7 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, Group
+from django.contrib.auth import login, BACKEND_SESSION_KEY, load_backend, import_string
+from django.conf import settings
 
-from .models import User, Publication, Category, UserProfile
+
+from .models import User, Publication, Category
 from .utils import paginator, sidebar, get_best_comments
 
 data = sidebar()
@@ -45,7 +48,7 @@ def user_profile(request, username):
 
 def user_publications(request, username):
     user = User.objects.get(username=username)
-    publications = user.publications.all()
+    publications = user.publications.order_by('-rating')
     publications = paginator(publications, request)
     data.update({'user': user, 'publications': publications})
     return render(request, 'base/pages/user_publications.html', data)
@@ -98,3 +101,24 @@ def user_followers(request, username):
     followers = paginator(followers, request)
     data.update({'user': user, 'followers': followers})
     return render(request, 'base/pages/user_followers.html', data)
+
+
+def login_as(request, username):
+    user = User.objects.get(username=username)
+    user.backend = 'django.contrib.auth.backends.ModelBackend'
+    if user:
+        login(request, user)
+    return redirect('/')
+
+
+# def register(request, code):
+#     pass
+#
+#
+# class RegisterFormView(FormView):
+#     form_class = UserCreationForm
+#     template_name = "register.html"
+#
+#     def form_valid(self, form):
+#         form.save()
+#         return super(RegisterFormView, self).form_valid(form)

@@ -1,7 +1,7 @@
 import random
 
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
@@ -15,7 +15,7 @@ from base.models import (User, OrganisationType, Organisation, UserProfile, Cate
 class Command(BaseCommand):
 
     roles = (
-        ('reader', 1),
+        (None, 1),
         ('author', 7),
         ('journalist', 3),
         ('moderator', 2),
@@ -37,7 +37,7 @@ class Command(BaseCommand):
     count_followers = (1, 3)
 
     # roles = (
-    #     ('reader', 10),
+    #     (None, 10),
     #     ('author', 20),
     #     ('journalist', 10),
     #     ('moderator', 5),
@@ -125,6 +125,8 @@ class Command(BaseCommand):
         self.print_notice('Start generate groups')
         count = 0
         for count, (role, _) in enumerate(self.roles, 1):
+            if not role:
+                continue
             Group.objects.create(name=role)
             if count % 100 == 0 and count > 0:
                 self.print_success('Generated {} groups'.format(count))
@@ -138,17 +140,20 @@ class Command(BaseCommand):
         for role, count_users in self.roles:
             for _ in range(count_users):
                 gender = random.choice(['female', 'male'])
+                first_name, last_name = person.full_name(gender).split()
                 user = User.objects.create_user(
                     username=person.username(gender),
                     email=person.email(gender),
-                    password='1234567890qwerty',
-                    full_name=person.full_name(gender),
+                    password='q1j2t17g',
+                    first_name=first_name,
+                    last_name=last_name
                 )
                 UserProfile.objects.create(
                     user=user
                 )
-                group = groups.get(name=role)
-                user.groups.add(group)
+                if role:
+                    group = groups.get(name=role)
+                    user.groups.add(group)
                 if count % 100 == 0 and count > 0:
                     self.print_success('Generated {} users'.format(count))
                 count += 1

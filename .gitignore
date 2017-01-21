@@ -90,5 +90,7 @@ ENV/
 
 .idea/
 node_modules/
+static/
+static_dev/
 
 db.sqlite3

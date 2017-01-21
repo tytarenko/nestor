@@ -16,15 +16,18 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
+from social.apps.django_app import urls
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'', include('base.urls')),
+    url(r'^auth/', include('django.contrib.auth.urls')),
+    url(r'^oauth/', include('social.apps.django_app.urls', namespace='social')),
+    url(r'^', include('base.urls')),
 ]
 
 
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+# if settings.DEBUG:
+#     import debug_toolbar
+#     urlpatterns += [
+#         url(r'^__debug__/', include(debug_toolbar.urls)),
+#     ]

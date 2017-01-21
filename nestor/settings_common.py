@@ -24,7 +24,7 @@ SECRET_KEY = 'b-=hw@zwm(r3+@mp0qb7m59qyw2w*ekdcxku3k&ht056ct9yg!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['44dfd924.ngrok.io', '127.0.0.1']
 
 
 # Application definition
@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework',
 
+    'social.apps.django_app.default',
+
     'base',
 ]
 
@@ -51,6 +53,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'base.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'nestor.urls'
@@ -68,6 +72,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'social.apps.django_app.context_processors.backends',
+                'social.apps.django_app.context_processors.login_redirect',
             ],
         },
     },
@@ -123,8 +130,33 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_dev')
+]
+
+STATIC_URL = '/static_dev/'
 
 AUTH_USER_MODEL = 'base.User'
 
-PUBLICATIONS_PER_PAGE = 10
+PUBLICATIONS_PER_PAGE = 30
+
+LOGIN_URL = '/auth/login'
+LOGOUT_URL = '/auth/logout'
+LOGIN_REDIRECT_URL = 'main'
+
+
+AUTHENTICATION_BACKENDS = (
+    'social.backends.github.GithubOAuth2',
+    'social.backends.vk.VKOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+
+SOCIAL_AUTH_GITHUB_KEY = '9cdae8dc816d80d8231e'
+SOCIAL_AUTH_GITHUB_SECRET = '61d13a1d05004e035856c59763203a6d1d4598d3'
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = '5832973'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'wEiWipp0dSTcqkkJdHiX'
+
