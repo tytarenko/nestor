@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.db import models
 
 
@@ -9,17 +9,20 @@ class User(AbstractUser):
         symmetrical=False,
         related_name='follows',
     )
-    publication_bookmark = models.ManyToManyField(
-        'Publication',
-    )
-    comment_bookmark = models.ManyToManyField(
-        'Comment',
-    )
+    publication_bookmark = models.ManyToManyField('Publication')
+    comment_bookmark = models.ManyToManyField('Comment')
     is_verified = models.BooleanField(default=False)
 
     def get_group(self):
-        group = self.groups.first()
-        return group if group else 'reader'
+        return self.groups.first()
+
+    # @TODO:
+    def can_voting_for_publication(self):
+        return True if self.get_goup() and self.userprofile.rating >= -15 else False
+
+    # @TODO:
+    def can_voting_for_comment(self):
+        return True if self.get_goup() and self.userprofile.rating >= -15 else False
 
 
 class TimeStampedModel(models.Model):
@@ -87,7 +90,7 @@ class UserProfile(TimeStampedModel):
     rating = models.FloatField(default=0)
 
     def __str__(self):
-        return self.full_name
+        return self.user.get_full_name()
 
 
 class Category(TimeStampedModel, TitleSlugDescriptionAuthorModel):
@@ -185,5 +188,21 @@ class Invite(TimeStampedModel):
         User,
         related_name="invited",
         null=True,
+        default=None,
+        blank=True,
+    )
+    group = models.OneToOneField(
+        Group,
+        related_name="invites",
+        null=True,
         default=None
+    )
+
+
+class UserRegistrationCode(TimeStampedModel):
+    expired = models.DateTimeField(null=True, default=None)
+    hashcode = models.CharField(max_length=255, null=True, default=None)
+    user = models.OneToOneField(
+        User,
+        related_name="registration_code"
     )

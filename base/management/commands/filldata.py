@@ -11,6 +11,8 @@ from base.models import (User, OrganisationType, Organisation, UserProfile, Cate
                          PublicationType, Blog, Publication, Comment, PublicationVoice,
                          CommentVoice, UserVoice)
 
+from base.utils import recalc_publication_rating, recalc_comment_rating
+
 
 class Command(BaseCommand):
 
@@ -144,10 +146,11 @@ class Command(BaseCommand):
                 user = User.objects.create_user(
                     username=person.username(gender),
                     email=person.email(gender),
-                    password='q1j2t17g',
                     first_name=first_name,
                     last_name=last_name
                 )
+                user.set_password('q1j2t17g')
+                user.save()
                 UserProfile.objects.create(
                     user=user
                 )
@@ -286,10 +289,7 @@ class Command(BaseCommand):
         self.print_notice('Start recalculate publication\'s voices')
         publications = Publication.objects.all()
         for publication in publications:
-            publications_voices = publication.publications_voices.all()
-            publications_voices.values_list('voice', flat=True)
-            publication.rating = sum(publications_voices.values_list('voice', flat=True))
-            publication.save()
+            recalc_publication_rating(publication)
         self.print_notice('Finished recalculate publication\'s voices')
 
     def generate_comment_voices(self):
@@ -316,10 +316,7 @@ class Command(BaseCommand):
         self.print_notice('Start recalculate comment\'s voices')
         comments = Comment.objects.all()
         for comment in comments:
-            comments_voices = comment.comments_voices.all()
-            comments_voices.values_list('voice', flat=True)
-            comment.rating = sum(comments_voices.values_list('voice', flat=True))
-            comment.save()
+            recalc_comment_rating(comment)
         self.print_notice('Finished recalculate comment\'s voices')
 
     def generate_user_voices(self):

@@ -57,10 +57,22 @@ class UserChangeForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('email', 'password', 'full_name', 'avatar', 'is_active')
+        fields = ('email', 'password', 'avatar', 'is_active')
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
         # This is done here, rather than on the field, because the
         # field does not have access to the initial value
         return self.initial["password"]
+
+
+class RegistrationForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('email',)
+
+
+class RegistrationFinalityForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'password')

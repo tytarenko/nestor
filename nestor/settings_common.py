@@ -39,8 +39,8 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'rest_framework',
-
     'social.apps.django_app.default',
+    'registration',
 
     'base',
 ]
@@ -150,6 +150,9 @@ LOGIN_REDIRECT_URL = 'main'
 AUTHENTICATION_BACKENDS = (
     'social.backends.github.GithubOAuth2',
     'social.backends.vk.VKOAuth2',
+    # 'social.backends.facebook.FacebookOAuth2',
+    # 'social_core.backends.twitter.TwitterOAuth',
+    # 'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -159,4 +162,11 @@ SOCIAL_AUTH_GITHUB_SECRET = '61d13a1d05004e035856c59763203a6d1d4598d3'
 
 SOCIAL_AUTH_VK_OAUTH2_KEY = '5832973'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'wEiWipp0dSTcqkkJdHiX'
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email', 'photos']
 
+SOCIAL_AUTH_FACEBOOK_KEY = '378684142499235'
+SOCIAL_AUTH_FACEBOOK_SECRET = '8803366c312d3e5dce3c6a0f9e6f11aa'
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'first_name', 'last_name', 'picture']
+
+
+REGISTRATION_SALT = 'some_salt'

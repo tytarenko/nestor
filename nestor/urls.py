@@ -21,6 +21,7 @@ from social.apps.django_app import urls
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^auth/', include('django.contrib.auth.urls')),
+    # url(r'^auth/', include('registration.backends.simple.urls')),
     url(r'^oauth/', include('social.apps.django_app.urls', namespace='social')),
     url(r'^', include('base.urls')),
 ]

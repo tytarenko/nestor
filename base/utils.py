@@ -1,8 +1,12 @@
+from hashlib import md5
+
 from django.conf import settings
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.contrib.auth.models import User
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
 
-from .models import Category
+
+from .models import User, Category
 
 
 def paginator(objects, request):
@@ -35,6 +39,20 @@ def recalc_users_rating():
         user_profile.save()
 
 
+def recalc_publication_rating(publication):
+    publications_voices = publication.publications_voices.all()
+    publications_voices.values_list('voice', flat=True)
+    publication.rating = sum(publications_voices.values_list('voice', flat=True))
+    publication.save()
+
+
+def recalc_comment_rating(comment):
+    comments_voices = comment.comments_voices.all()
+    comments_voices.values_list('voice', flat=True)
+    comment.rating = sum(comments_voices.values_list('voice', flat=True))
+    comment.save()
+
+
 def get_best_comments(comments):
     comment = comments.latest('rating')
     while True:
@@ -48,5 +66,14 @@ def get_best_comments(comments):
     return comment,
 
 
+def generate_hashcode(datetime):
+    timestamp_with_salt = '{}_{}'.format(datetime.timestamp(), settings.REGISTRATION_SALT)
+    return md5(timestamp_with_salt.encode('utf-8')).hexdigest()
 
 
+# @TODO add SMTPException and setting subject and from_email and random sting
+def send_registration_mail(email, hashcode, username):
+    cxt = {'username': username, 'hashcode': hashcode}
+    text = render_to_string('emails/reg.txt', cxt)
+    html = render_to_string('emails/reg.html', cxt)
+    send_mail('Finishing registration', text, 'test@mail.com', [email], html_message=html)

@@ -4,12 +4,12 @@
         <li>
         <div>
             <p class="text-muted">{{ publication.created_at }}</p>
-            <h2><a href="{% url 'publication' pk=publication.id %}">{{ publication.title }}</a></h2>
+            <h2><a href="{% url 'publication' publication_id=publication.id %}">{{ publication.title }}</a></h2>
             {% include 'base/snippets/publication_categories.html' with categories=publication.categories.all %}
             <p>{{ publication.short_description }}</p>
             <p>
                 <a href="{% url 'user_profile' username=publication.author.username %}">{{ publication.author.get_full_name }}</a>
-                <a href="{% url 'publication' pk=publication.id %}#comments"><span class="glyphicon glyphicon-comment" aria-hidden="true"></span> Comments({{ publication.comments.count }})</a>
+                <a href="{% url 'publication' publication_id=publication.id %}#comments"><span class="glyphicon glyphicon-comment" aria-hidden="true"></span> Comments({{ publication.comments.count }})</a>
                 <span class="label label-{% if publication.rating > 0 %}success{% elif publication.rating == 0 %}default{% else %}danger{% endif %} pull-right">{{ publication.rating }}</span>
             </p>
         </div>

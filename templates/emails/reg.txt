@@ -1,0 +1,2 @@
+Hello {{ username }} - your account is activated.
+Go to this link {{ request.get_host }}{% url 'registration_finality' hashcode=hashcode %} for finish registration

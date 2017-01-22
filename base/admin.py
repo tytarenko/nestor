@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (User, OrganisationType, Organisation, UserProfile, Category, Tag,
-                     PublicationType, Blog, Publication, Comment,)
+                     PublicationType, Blog, Publication, Comment, UserRegistrationCode,
+                     Invite,)
 
 admin.site.register(User)
 admin.site.register(OrganisationType)
@@ -12,3 +13,5 @@ admin.site.register(PublicationType)
 admin.site.register(Blog)
 admin.site.register(Publication)
 admin.site.register(Comment)
+admin.site.register(UserRegistrationCode)
+admin.site.register(Invite)

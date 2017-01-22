@@ -6,7 +6,7 @@
     <p>{{ publication.fulltext }}</p>
     <p>
         <a href="{% url 'user_profile' username=publication.author.username %}">{{ publication.author.get_full_name }}</a>
-        <a href="{% url 'publication' pk=publication.id %}#comments">Comments({{ publication.comments.count }})</a>
+        <a href="{% url 'publication' publication_id=publication.id %}#comments">Comments({{ publication.comments.count }})</a>
         <span class="label label-{% if publication.rating > 0 %}success{% elif publication.rating == 0 %}default{% else %}danger{% endif %} pull-right">{{ publication.rating }}</span>
     </p>
     <div id="comments">
