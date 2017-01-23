@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser, Group
+from django.core.urlresolvers import reverse
 from django.db import models
 
 
@@ -18,11 +19,12 @@ class User(AbstractUser):
 
     # @TODO:
     def can_voting_for_publication(self):
-        return True if self.get_goup() and self.userprofile.rating >= -15 else False
+        # return True if self.get_goup() and self.userprofile.rating >= -15 else False
+        return True
 
     # @TODO:
     def can_voting_for_comment(self):
-        return True if self.get_goup() and self.userprofile.rating >= -15 else False
+        return True if self.get_group() and self.userprofile.rating >= -15 else False
 
 
 class TimeStampedModel(models.Model):
@@ -134,6 +136,9 @@ class Publication(TimeStampedModel):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('publication', kwargs={'publication_id': self.pk})
+
 
 class Comment(TimeStampedModel):
     comment = models.TextField()
@@ -150,6 +155,9 @@ class Comment(TimeStampedModel):
 
     def __str__(self):
         return self.comment[:75] + (self.comment[75:] and '...')
+
+    def get_absolute_url(self):
+        return reverse('publication', kwargs={'publication_id': self.publication.pk})
 
 
 class PublicationVoice(TimeStampedModel):

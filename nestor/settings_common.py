@@ -140,7 +140,7 @@ STATIC_URL = '/static_dev/'
 
 AUTH_USER_MODEL = 'base.User'
 
-PUBLICATIONS_PER_PAGE = 30
+PUBLICATIONS_PER_PAGE = 5
 
 LOGIN_URL = '/auth/login'
 LOGOUT_URL = '/auth/logout'

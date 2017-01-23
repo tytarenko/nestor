@@ -1,20 +1,27 @@
 from datetime import datetime
 
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.db.models.aggregates import Count
+from django.views.generic import ListView, DetailView
+from django.core.urlresolvers import reverse_lazy
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import Group
 from django.contrib.auth import login, authenticate
 from django.views.generic import View
 from django.db import transaction
+from django.db import IntegrityError
 from django.utils import timezone
 
 from .forms import RegistrationForm, RegistrationFinalityForm
 from .models import (User, Publication, Comment, Category, PublicationVoice,
-                     CommentVoice, UserRegistrationCode, UserProfile, Invite)
+                     CommentVoice, UserRegistrationCode, UserProfile, Invite, Tag)
 from .utils import (paginator, sidebar, get_best_comments, recalc_publication_rating,
                     recalc_comment_rating, generate_hashcode, send_registration_mail, )
 
 data = sidebar()
 
+import logging
 
 def main(request):
     publications = Publication.objects.all()
@@ -23,15 +30,68 @@ def main(request):
     return render(request, 'base/pages/main.html', data)
 
 
-def publication(request, publication_id):
-    publication = Publication.objects.get(pk=publication_id)
-    comments = publication.comments.all()
-    data.update({
-        'publication': publication,
-        'comments': comments.filter(parent=None),
-        'best_comments': get_best_comments(comments)
-    })
-    return render(request, 'base/pages/publication.html', data)
+class PublicationListView(ListView):
+    model = Publication
+    queryset = Publication.objects.filter(is_published=True)
+    template_name = 'base/pages/main.html'
+    paginate_by = settings.PUBLICATIONS_PER_PAGE
+    context_object_name = 'publications'
+
+
+class PublicationDetailView(DetailView):
+    model = Publication
+    template_name = 'base/pages/publication.html'
+    pk_url_kwarg = 'publication_id'
+    context_object_name = 'publication'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        comments = context['publication'].comments.all()
+        if comments:
+            context.update({
+                'comments': comments.filter(parent=None),
+                'best_comments': get_best_comments(comments)
+            })
+        return context
+
+
+class PublicationCreateView(CreateView):
+    model = Publication
+    template_name = 'base/pages/publication_form.html'
+    fields = ['title', 'categories', 'type', 'short_description', 'fulltext', 'tags']
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        if 'submit_draft' in self.request.POST:
+            form.instance.is_published = False
+        return super().form_valid(form)
+
+
+class PublicationUpdateView(UpdateView):
+    model = Publication
+    pk_url_kwarg = 'publication_id'
+    template_name = 'base/pages/publication_form.html'
+    fields = ['title', 'categories', 'type', 'short_description', 'fulltext', 'tags']
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+class PublicationDeleteView(DeleteView):
+    model = Publication
+    pk_url_kwarg = 'publication_id'
+    success_url = reverse_lazy('publications')
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        self.object.is_published = False
+        self.object.save()
+        return redirect(success_url)
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
 
 
 def categories(request, slug):
@@ -54,9 +114,17 @@ def user_profile(request, username):
 
 def user_publications(request, username):
     user = User.objects.get(username=username)
-    publications = user.publications.order_by('-rating')
+    publications = user.publications.filter(is_published=True).order_by('-rating')
     publications = paginator(publications, request)
-    data.update({'user': user, 'publications': publications})
+    data.update({'user': user, 'publications': publications, 'subactive_page': 'in_published'})
+    return render(request, 'base/pages/user_publications.html', data)
+
+
+def user_publications_drafts(request, username):
+    user = User.objects.get(username=username)
+    publications = user.publications.filter(is_published=False)
+    publications = paginator(publications, request)
+    data.update({'user': user, 'publications': publications, 'subactive_page': 'draft'})
     return render(request, 'base/pages/user_publications.html', data)
 
 
@@ -69,10 +137,8 @@ def user_comments(request, username):
 
 
 def users(request):
-    # group = Group.objects.filter(name__in=['author', 'moderator', 'admin'])
     group = Group.objects.all()
     users = User.objects.filter(groups__in=group) #.order_by('-rating', '-authority')
-    # users_profiles = users.userprofile.order_by('-rating', '-authority')
     data.update({'users': users})
     return render(request, 'base/pages/users.html', data)
 
@@ -129,28 +195,35 @@ def publication_voicing(request, publication_id, voice):
     if not user.is_authenticated() or not user.can_voting_for_publication():
         return
     publication = Publication.objects.get(pk=publication_id)
-    PublicationVoice.objects.get_or_create(
-        voter=user,
-        publication=publication,
-        voice=get_voice(voice)
-    )
-    recalc_publication_rating(publication)
-    # return redirect(request.META.get('HTTP_REFERER','/'))
+    try:
+        PublicationVoice.objects.get_or_create(
+            voter=user,
+            publication=publication,
+            voice=get_voice(voice)
+        )
+        recalc_publication_rating(publication)
+    # @TODO
+    except IntegrityError:
+        pass
+    return redirect(request.META.get('HTTP_REFERER','/'))
 
-import logging
+
 def comment_voicing(request, comment_id, voice):
     user = request.user
-    # if not user.is_authenticated() or not user.can_voting_for_comment():
-    #     return
+    if not user.is_authenticated() or not user.can_voting_for_comment():
+        return
     comment = Comment.objects.get(pk=comment_id)
-    comment_voice, created = CommentVoice.objects.get_or_create(
-        voter=user,
-        comment=comment,
-        voice=get_voice(voice)
-    )
-    logging.error({'comment': comment, 'comment_voice': comment_voice, 'created':created })
+    try:
+        CommentVoice.objects.get_or_create(
+            voter=user,
+            comment=comment,
+            voice=get_voice(voice)
+        )
+        recalc_comment_rating(comment)
+    # @TODO
+    except IntegrityError:
+        pass
     return redirect(request.META.get('HTTP_REFERER', '/'))
-    # return render(request, 'base/test.html', {'comment': comment, 'comment_voice': comment_voice, 'created':created })
 
 
 class CreateUserViewMixin:
@@ -271,3 +344,52 @@ class RegistrationFinalityView(View):
             # @TODO fix
             raise
 
+
+class CommentCreateView(CreateView):
+    model = Comment
+    template_name = 'base/pages/comment_form.html'
+    fields = ['comment']
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.publication_id = self.kwargs['publication_id']
+        if 'parent' in self.request.GET:
+            form.instance.parent_id = self.request.GET.get('parent')
+        return super().form_valid(form)
+
+
+class CommentUpdateView(UpdateView):
+    model = Comment
+    pk_url_kwarg = 'comment_id'
+    template_name = 'base/pages/comment_form.html'
+    fields = ['comment']
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+class CommentDeleteView(DeleteView):
+    model = Comment
+    pk_url_kwarg = 'comment_id'
+    success_url = reverse_lazy('publication')
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        comment = self.get_object()
+        publication_id = comment.publication.id
+        comment.delete()
+        return redirect('publication', publication_id=publication_id)
+
+
+def search(request):
+    if 't' in request.GET:
+        ts = request.GET.get('t')
+        t = ts.split('#')
+        t = filter(None, map(lambda s: s.strip(), t))
+        tags = Tag.objects.filter(slug__in=t)
+        publications = Publication.objects.filter(tags__in=tags)
+        data.update({'publications': publications, 'tags': ts})
+    return render(request, 'base/pages/search_result.html', data)

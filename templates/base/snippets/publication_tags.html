@@ -1,0 +1,3 @@
+{% for tag in tags %}
+    <a href="{% url 'search' %}?t={{ tag.slug  }}"><em>#{{ tag.slug }}</em></a>
+{% endfor %}

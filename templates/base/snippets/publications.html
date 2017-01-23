@@ -5,7 +5,8 @@
         <div>
             <p class="text-muted">{{ publication.created_at }}</p>
             <h2><a href="{% url 'publication' publication_id=publication.id %}">{{ publication.title }}</a></h2>
-            {% include 'base/snippets/publication_categories.html' with categories=publication.categories.all %}
+            <p>{% include 'base/snippets/publication_categories.html' with categories=publication.categories.all %}</p>
+            <p>{% include 'base/snippets/publication_tags.html' with tags=publication.tags.all %}</p>
             <p>{{ publication.short_description }}</p>
             <p>
                 <a href="{% url 'user_profile' username=publication.author.username %}">{{ publication.author.get_full_name }}</a>
