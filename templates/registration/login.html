@@ -60,10 +60,17 @@
   <div class="submit-row">
     <label>&nbsp;</label><input type="submit" value="{% trans 'Log in' %}" />
   </div>
-
-   <a href="{% url 'social:begin' 'github' %}">Login with GitHub</a><br>
-   <a href="{% url 'social:begin' 'vk-oauth2' %}">Login with Vk</a><br>
+    <h3>Login with</h3>
+   <a href="#" onclick="open_login_window('{% url 'social:begin' 'github' %}')"><i class="fa fa-2x fa-github-square" aria-hidden="true"></i></a>
+   <a href="#" onclick="open_login_window('{% url 'social:begin' 'twitter' %}')"><i class="fa fa-2x fa-twitter-square" aria-hidden="true"></i></a>
+   <a href="#" onclick="open_login_window('{% url 'social:begin' 'facebook' %}')"><i class="fa fa-2x fa-facebook-square" aria-hidden="true"></i></a>
+   <a href="#" onclick="open_login_window('{% url 'social:begin' 'google-oauth2' %}')"><i class="fa fa-2x fa-google-plus-square" aria-hidden="true"></i></a>
+   <a href="#" onclick="open_login_window('{% url 'social:begin' 'vk-oauth2' %}')"><i class="fa fa-vk fa-2x"></i></a>
 </form>
-
+    <script>
+        open_login_window = function (url) {
+            window.open(url, '_blank', 'location=yes,height=600,width=700,scrollbars=yes,status=yes');
+        }
+    </script>
 </div>
 {% endblock %}

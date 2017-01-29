@@ -1,8 +1,15 @@
 <ul>
 {% for user in users %}
     <li>
-       <a href="{% url 'user_profile' username=user.username%}">{{ user.get_full_name }} ({{ user.get_group }})</a>
+        <a href="{% url 'user_profile' username=user.username%}">{{ user.get_full_name }} ({{ user.get_group }})</a>
+        {% if request.user.is_authenticated and user != request.user %}
+            {% if user not in request.user.follows.all %}
+            <a href="{% url 'follow_user' username=user.username %}" class="btn btn-success">Follow</a>
+            {% else %}
+            <a href="{% url 'unfollow_user' username=user.username %}" class="btn btn-info">Unfollow</a>
+            {% endif %}
         <a href="{% url 'login_as' username=user.username %}">login as {{ user.username }}</a>
+        {% endif %}
     </li>
 {% endfor %}
 </ul>

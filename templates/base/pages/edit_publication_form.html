@@ -3,7 +3,10 @@
 {% block title %}Write Publication{% endblock %}
 
 {% block content %}
-  <h2>Write Publication</h2>
+
+  {% include 'base/snippets/user_profile_head.html' with active_page='publications' %}
+
+  <h2>Edit Publication</h2>
   <form method="post">
       <div class="form-group">
     {% csrf_token %}

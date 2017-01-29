@@ -1,0 +1,22 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block content %}
+
+{% include 'base/snippets/organization/organization_header.html' with active_page='profile'  %}
+
+<dl class="dl-horizontal">
+    <dt>date found:</dt><dd>{{ organization.found_at }}</dd>
+    <dt>date registration:</dt><dd>{{ organization.created_at }}</dd>
+    <dt>about company:</dt><dd>{{ organization.description }}</dd>
+    <dt>type:</dt><dd>{{ organization.type }}</dd>
+    <dt>founder:</dt><dd><a href="{% url 'user_profile' username=organization.founder.username %}">{{ organization.founder.get_full_name }}</a></dd>
+    <dt>employee:</dt><dd>
+    <ul>
+    {% for employee in organization.employee.all %}
+        <li><a href="{% url 'user_profile' username=employee.username %}">{{ employee.get_full_name }}</a></li>
+    {% endfor %}
+    </ul>
+    </dd>
+</dl>
+
+{% endblock %}

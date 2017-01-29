@@ -1,10 +1,19 @@
+from datetime import date
+
 from django.contrib.auth.models import AbstractUser, Group
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class User(AbstractUser):
     avatar = models.ImageField(default=None, null=True)
+    avatar_url = models.CharField(max_length=255, default=None, null=True)
     follower = models.ManyToManyField(
         'self',
         symmetrical=False,
@@ -13,9 +22,14 @@ class User(AbstractUser):
     publication_bookmark = models.ManyToManyField('Publication')
     comment_bookmark = models.ManyToManyField('Comment')
     is_verified = models.BooleanField(default=False)
+    background_image = models.ImageField(default=None, null=True)
+    bio = models.TextField()
+    authority = models.FloatField(default=0)
+    rating = models.FloatField(default=0)
+    founded_projects = GenericRelation('Project')
 
     def get_group(self):
-        return self.groups.first()
+        return self.groups.first() or 'reader'
 
     # @TODO:
     def can_voting_for_publication(self):
@@ -25,6 +39,16 @@ class User(AbstractUser):
     # @TODO:
     def can_voting_for_comment(self):
         return True if self.get_group() and self.userprofile.rating >= -15 else False
+
+    # @TODO
+    def can_create_organization(self):
+        return True
+
+    def is_my_follower(self, user):
+        return user in self.follower.all()
+
+    def is_follow_user(self, user):
+        return user in self.follows.all()
 
 
 class TimeStampedModel(models.Model):
@@ -54,22 +78,22 @@ class TitleSlugDescriptionAuthorModel(TitleSlugDescriptionModel):
         abstract = True
 
 
-class OrganisationType(TimeStampedModel, TitleSlugDescriptionAuthorModel):
+class OrganizationType(TimeStampedModel, TitleSlugDescriptionAuthorModel):
     pass
 
 
-class Organisation(TimeStampedModel, TitleSlugDescriptionModel):
-    type = models.ForeignKey(OrganisationType, related_name='organisations')
+class Organization(TimeStampedModel, TitleSlugDescriptionModel):
+    type = models.ForeignKey(OrganizationType, related_name='organizations')
     avatar = models.ImageField(default=None, null=True)
     background_image = models.ImageField(default=None, null=True)
-    founder = models.ForeignKey(User, related_name="founded_organisations")
+    founder = models.ForeignKey(User, related_name="founded_organizations")
     employee = models.ManyToManyField(
         User,
-        related_name='organisations',
+        related_name='organizations',
     )
     subscriber = models.ManyToManyField(
         User,
-        related_name='subscribes_organisations',
+        related_name='subscribes_organizations',
     )
     parent = models.ForeignKey(
         "self",
@@ -78,26 +102,26 @@ class Organisation(TimeStampedModel, TitleSlugDescriptionModel):
         null=True,
         default=None
     )
+    is_active = models.BooleanField(default=True)
+    found_at = models.DateField(_("was found "), default=date.today)
+    founded_projects = GenericRelation('Project')
 
+    def get_publications_count(self):
+        return self.publications.filter(is_published=True).count()
 
-class UserProfile(TimeStampedModel):
-    background_image = models.ImageField(default=None, null=True)
-    bio = models.TextField()
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        primary_key=True,
-    )
-    authority = models.FloatField(default=0)
-    rating = models.FloatField(default=0)
+    def get_subscribers_count(self):
+        return self.subscriber.count()
 
-    def __str__(self):
-        return self.user.get_full_name()
+    def get_absolute_url(self):
+        return reverse('organization_profile', kwargs={'slug': self.slug})
 
 
 class Category(TimeStampedModel, TitleSlugDescriptionAuthorModel):
     class Meta:
         verbose_name_plural = "categories"
+
+    def publications_count(self):
+        return self.publications.filter(is_published=True).count()
 
 
 class Tag(TimeStampedModel, TitleSlugDescriptionAuthorModel):
@@ -108,14 +132,6 @@ class PublicationType(TimeStampedModel, TitleSlugDescriptionAuthorModel):
     pass
 
 
-class Blog(TimeStampedModel):
-    organisation = models.OneToOneField(
-        Organisation,
-        on_delete=models.CASCADE,
-        primary_key=True,
-    )
-
-
 class Publication(TimeStampedModel):
     title = models.TextField()
     type = models.ForeignKey(PublicationType, related_name='publications')
@@ -124,8 +140,8 @@ class Publication(TimeStampedModel):
     categories = models.ManyToManyField(Category, related_name='publications')
     tags = models.ManyToManyField(Tag, related_name='publications')
     author = models.ForeignKey(User, related_name='publications')
-    blog = models.ForeignKey(
-        Blog,
+    organization = models.ForeignKey(
+        Organization,
         related_name='publications',
         default=None,
         null=True
@@ -152,6 +168,7 @@ class Comment(TimeStampedModel):
         null=True,
         default=None
     )
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.comment[:75] + (self.comment[75:] and '...')
@@ -187,7 +204,12 @@ class UserVoice(TimeStampedModel):
         unique_together = (('user', 'voter'),)
 
 
+class InviteType(TimeStampedModel, TitleSlugDescriptionAuthorModel):
+    pass
+
+
 class Invite(TimeStampedModel):
+    type = models.ForeignKey(InviteType, related_name='invites')
     inviter = models.ForeignKey(User, related_name="invites")
     email = models.EmailField(null=True, default=None)
     expired = models.DateTimeField(null=True, default=None)
@@ -214,3 +236,28 @@ class UserRegistrationCode(TimeStampedModel):
         User,
         related_name="registration_code"
     )
+
+
+class Project(TimeStampedModel):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+    short_description = models.TextField()
+    fulltext = models.TextField()
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    founder = GenericForeignKey('content_type', 'object_id')
+    is_active = models.BooleanField(default=True)
+    subscriber = models.ManyToManyField(
+        User,
+        related_name='subscribes_projects',
+    )
+    member = models.ManyToManyField(
+        User,
+        related_name='working_projects',
+    )
+
+    def __str__(self):
+        return '{} ({})'.format(self.title, self.content_type)
+
+    def get_absolute_url(self):
+        return reverse('project', kwargs={'slug': self.slug})

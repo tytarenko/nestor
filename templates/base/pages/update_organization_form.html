@@ -1,0 +1,17 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block title %}Create Organization{% endblock %}
+
+{% block content %}
+
+  {% include 'base/snippets/user_profile_head.html' %}
+
+  <h2>Create Organization</h2>
+  <form method="post">
+      <div class="form-group">
+    {% csrf_token %}
+    {{ form.as_p }}
+      </div>
+    <input class="btn btn-success" type="submit" name="submit" >
+  </form>
+{% endblock %}

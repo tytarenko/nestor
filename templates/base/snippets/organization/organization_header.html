@@ -1,0 +1,16 @@
+<h1>{{ organization.title }}
+    {% if request.user.is_authenticated and organization.founder != request.user %}
+        {% if request.user not in organization.subscriber.all %}
+        <a href="{% url 'subscribe_organization' slug=organization.slug %}" class="btn btn-success">Subscribe</a>
+        {% else %}
+        <a href="{% url 'unsubscribe_organization' slug=organization.slug %}" class="btn btn-info">Unsubscribe</a>
+        {% endif %}
+    {% endif %}
+</h1>
+<ul class="nav nav-pills nav-justified">
+  <li role="presentation" {% if active_page == 'profile' %}class="active"{% endif %}><a href="{% url 'organization_profile' slug=organization.slug %}">Profile</a></li>
+  <li role="presentation" {% if active_page == 'blog' %}class="active"{% endif %}><a href="{% url 'organization_blog' slug=organization.slug %}">Blog ({{ organization.get_publications_count }})</a></li>
+  <li role="presentation" {% if active_page == 'subscribers' %}class="active"{% endif %}><a href="{% url 'organization_subscribers' slug=organization.slug %}">Subscribers ({{ organization.get_subscribers_count }})</a></li>
+  <!--<li role="presentation" {% if active_page == ''%}class="active"{% endif %}><a href="#">Vacancies</a></li>-->
+  <li role="presentation" {% if active_page == 'projects'%}class="active"{% endif %}><a href="{% url 'organization_projects' slug=organization.slug %}">Projects</a></li>
+</ul>

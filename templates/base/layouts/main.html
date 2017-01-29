@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://use.fontawesome.com/a3f9df11da.js"></script>
 </head>
 <body style="padding-top: 70px;">
     <nav class="navbar navbar-default navbar-fixed-top">
@@ -17,13 +18,15 @@
                     <li><a href="{% url 'publications' %}">Publications</a></li>
                     <li><a href="{% url 'users' %}">Users</a></li>
                     <li><a href="{% url 'categories' %}">Categories</a></li>
+                    <li><a href="{% url 'organizations' %}">Organizations</a></li>
+                    <li><a href="{% url 'projects' %}">Projects</a></li>
                 </ul>
 
                 <ul class="nav navbar-nav pull-right">
-                    <li>
-                        <a href="{% url 'publication_add' %}" class="btn btn-default">Write</a>
-                    </li>
                     {% if request.user.is_authenticated %}
+                    <li>
+                        <a href="{% url 'publication_create' username=request.user.username %}" class="btn btn-default">Write</a>
+                    </li>
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ request.user.username }} <span class="caret"></span></a>
                         <ul class="dropdown-menu">
@@ -56,10 +59,52 @@
     </footer>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+    <script>
+        $(document).ready(function() {
+            var voicing_by_comment = function(url, id) {
+                $.ajax({
+                    url: url,
+                    success: function(data) {
+                        if (data['error'] == false) {
+                            comment_rating = data['comment_rating']
+                            if (comment_rating < 0) {
+                                rating_class = 'danger';
+                            } else if (comment_rating == 0) {
+                                rating_class = 'default';
+                            } else {
+                                rating_class = 'success';
+                            }
+                            rating_class = 'rating label label-' + rating_class;
+                            console.log(rating_class, comment_rating, "#commnet_" + data["comment_id"]);
+                            $("div#commnet_" + data["comment_id"] + " span.rating")
+                                .addClass( rating_class )
+                                .text(comment_rating);
+                        }
+                    }
+                });
+            }
+            $("a.comment_voice_like").on("click", function(){
+                id = $(this).data('id');
+                url = "/comments/" + id + "/voicing/like/"
+                voicing_by_comment(url, id)
+            });
+
+            $("a.comment_voice_unlike").on("click", function(){
+                id = $(this).data('id');
+                url = "/comments/" + id + "/voicing/unlike/"
+                voicing_by_comment(url, id)
+                //$("span.rating").removeClass().text(-1000);
+            });
+
+
+        });
+    </script>
 
 </body>
 </html>

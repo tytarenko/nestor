@@ -1,0 +1,14 @@
+<ul>
+{% for organization in organizations %}
+    <li><a href="{% url 'organization_profile' slug=organization.slug %}">{{ organization.title }}</a>
+    {% if request.user.is_authenticated and organization.founder == request.user %}
+        {% if organization.is_active %}
+        <a href="{% url 'organization_edit' slug=organization.slug %}" class="btn btn-warning">Edit</a>
+        <a href="{% url 'organization_delete' slug=organization.slug %}" class="btn btn-danger">Delete</a>
+        {% else %}
+        <a href="{% url 'organization_restore' slug=organization.slug %}" class="btn btn-primary">Restore</a>
+        {% endif %}
+    {% endif %}
+    </li>
+{% endfor %}
+</ul>

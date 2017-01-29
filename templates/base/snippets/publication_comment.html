@@ -1,19 +1,32 @@
 <div class="media">
     <div class="media-left"> <a href="#"> <img alt="64x64" class="media-object" data-src="holder.js/64x64" style="width: 32px; height: 32px;" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+PCEtLQpTb3VyY2UgVVJMOiBob2xkZXIuanMvNjR4NjQKQ3JlYXRlZCB3aXRoIEhvbGRlci5qcyAyLjYuMC4KTGVhcm4gbW9yZSBhdCBodHRwOi8vaG9sZGVyanMuY29tCihjKSAyMDEyLTIwMTUgSXZhbiBNYWxvcGluc2t5IC0gaHR0cDovL2ltc2t5LmNvCi0tPjxkZWZzPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+PCFbQ0RBVEFbI2hvbGRlcl8xNTlhYjQwYjg5ZSB0ZXh0IHsgZmlsbDojQUFBQUFBO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1mYW1pbHk6QXJpYWwsIEhlbHZldGljYSwgT3BlbiBTYW5zLCBzYW5zLXNlcmlmLCBtb25vc3BhY2U7Zm9udC1zaXplOjEwcHQgfSBdXT48L3N0eWxlPjwvZGVmcz48ZyBpZD0iaG9sZGVyXzE1OWFiNDBiODllIj48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIGZpbGw9IiNFRUVFRUUiLz48Zz48dGV4dCB4PSIxMi4xNzk2ODc1IiB5PSIzNi41Ij42NHg2NDwvdGV4dD48L2c+PC9nPjwvc3ZnPg==" data-holder-rendered="true"> </a> </div>
     <div class="media-body">
-        <div class="media-heading">
+        {% if comment.is_deleted is True and comment.children.all %}
+            <div class="media-heading">
+                <a>deleted</a>
+            </div>
+            deleted
+        {% else %}
+        <div class="media-heading" id="comment_{{ comment.id }}">
             <a href="{% url 'user_profile' username=comment.author.username %}">{{ comment.author.get_full_name }}</a>
+            {% if request.user.is_authenticated and comment.author == request.user %}
             <a href="{% url 'comment_edit' comment_id=comment.id %}">edit</a>
             <a href="{% url 'comment_delete' comment_id=comment.id %}">delete</a>
+            {% endif %}
             <span class="pull-right">
-                <a href="{% url 'comment_voicing' comment_id=comment.id voice='unlike' %}"><span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span> </a>
-                <span class="label label-{% if comment.rating > 0 %}success{% elif comment.rating == 0 %}default{% else %}danger{% endif %}">{{ comment.rating }}</span>
-                <a href="{% url 'comment_voicing' comment_id=comment.id voice='like' %}"><span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span> </a>
+                <!-- {% url 'comment_voicing' comment_id=comment.id voice='unlike' %}
+                {% url 'comment_voicing' comment_id=comment.id voice='like' %} -->
+                <a data-id="{{ comment.id }}" class="comment_voice_unlike"><span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span> </a>
+                <span class="rating label label-{% if comment.rating > 0 %}success{% elif comment.rating == 0 %}default{% else %}danger{% endif %}">{{ comment.rating }}</span>
+                <a data-id="{{ comment.id }}" class="comment_voice_like"><span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span> </a>
             </span>
             <span class="pull-right">{{ comment.created_at }}</span>
         </div>
         {{ comment.comment }}
+        {% if request.user.is_authenticated %}
         <p><a href="{% url 'comment_add' publication_id=publication.id %}?parent={{ comment.id }}">Comment</a></p>
+        {% endif %}
+        {% endif %}
         {% for subcomment in comment.children.all %}
             {% include 'base/snippets/publication_comment.html' with comment=subcomment %}
         {% endfor %}

@@ -1,0 +1,24 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block content %}
+
+<h1>{{ project.title }}
+    {% if request.user.is_authenticated %}
+        {% if project.founder != request.user %}
+            {% if request.user not in project.subscriber.all %}
+            <a href="{% url 'subscribe_project' slug=project.slug %}" class="btn btn-success">Subscribe</a>
+            {% else %}
+            <a href="{% url 'unsubscribe_project' slug=project.slug %}" class="btn btn-info">Unsubscribe</a>
+            {% endif %}
+        {% else %}
+            {% if project.is_active %}
+            <a href="{% url 'project_edit' slug=project.slug %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'project_delete' slug=project.slug %}" class="btn btn-danger">Delete</a>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</h1>
+
+<p>{{ project.fulltext }}</p>
+
+{% endblock %}

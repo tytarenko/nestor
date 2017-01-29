@@ -1,0 +1,9 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block content %}
+
+{% include 'base/snippets/organization/organization_header.html' with active_page='subscribers'  %}
+
+{% include 'base/snippets/users_list.html' with users=subscribers %}
+
+{% endblock %}

@@ -112,6 +112,30 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+DJANGO_LOG_LEVEL = DEBUG
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'base': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+    },
+
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -140,33 +164,55 @@ STATIC_URL = '/static_dev/'
 
 AUTH_USER_MODEL = 'base.User'
 
-PUBLICATIONS_PER_PAGE = 5
+OBJECT_PER_PAGE = 5
 
 LOGIN_URL = '/auth/login'
-LOGOUT_URL = '/auth/logout'
 LOGIN_REDIRECT_URL = 'main'
+LOGOUT_URL = '/auth/logout'
+
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/auth/close'
+
+SOCIAL_AUTH_PIPELINE = (
+    'social.pipeline.social_auth.social_details',
+    'social.pipeline.social_auth.social_uid',
+    'social.pipeline.social_auth.auth_allowed',
+    'social.pipeline.social_auth.social_user',
+    'social.pipeline.user.get_username',
+    'social.pipeline.social_auth.associate_by_email',
+    'social.pipeline.user.create_user',
+    'social.pipeline.social_auth.associate_user',
+    'social.pipeline.social_auth.load_extra_data',
+    'social.pipeline.user.user_details',
+    'base.pipelines.get_avatar'
+)
 
 
 AUTHENTICATION_BACKENDS = (
     'social.backends.github.GithubOAuth2',
     'social.backends.vk.VKOAuth2',
-    # 'social.backends.facebook.FacebookOAuth2',
-    # 'social_core.backends.twitter.TwitterOAuth',
-    # 'social_core.backends.google.GoogleOAuth2',
+    'social.backends.facebook.FacebookOAuth2',
+    'social.backends.twitter.TwitterOAuth',
+    'social.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
-
 SOCIAL_AUTH_GITHUB_KEY = '9cdae8dc816d80d8231e'
 SOCIAL_AUTH_GITHUB_SECRET = '61d13a1d05004e035856c59763203a6d1d4598d3'
+SOCIAL_AUTH_GITHUB_SCOPE = ['user:email']
 
 SOCIAL_AUTH_VK_OAUTH2_KEY = '5832973'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'wEiWipp0dSTcqkkJdHiX'
-SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email', 'photos']
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email']
+
+SOCIAL_AUTH_TWITTER_KEY = 'rq0v2jmM21FJ5CApyXMpIsIzQ'
+SOCIAL_AUTH_TWITTER_SECRET = '8ucdqCv9fEjLdk5ueJo4G0mWDqaLqkkIQOJ39MTGMEEuymHbde'
 
 SOCIAL_AUTH_FACEBOOK_KEY = '378684142499235'
 SOCIAL_AUTH_FACEBOOK_SECRET = '8803366c312d3e5dce3c6a0f9e6f11aa'
-SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'first_name', 'last_name', 'picture']
-
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'first_name', 'last_name']
 
 REGISTRATION_SALT = 'some_salt'
+
+AUTHORITY_SCORE = 0.1
+TOPIC_SCORE = 0.8
+COMMENT_SCORE = 0.01

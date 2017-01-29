@@ -11,7 +11,7 @@ MIDDLEWARE += (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
-DEBUG_TOOLBAR = True
+DEBUG_TOOLBAR = False
 
 if DEBUG_TOOLBAR:
     def show_toolbar(request):

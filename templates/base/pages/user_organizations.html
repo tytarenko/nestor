@@ -1,0 +1,20 @@
+{% extends 'base/layouts/main.html' %}
+
+
+{% block content %}
+
+{% include 'base/snippets/user_profile_head.html' with active_page='organizations' %}
+
+<ul class="nav nav-pills">
+  <li role="presentation" {% if subactive_page == 'subscribes' %}class="active"{% endif %}><a href="{% url 'user_subscribe_organizations' username=user.username %}">Subscribes</a></li>
+  <li role="presentation" {% if subactive_page == 'created' %}class="active"{% endif %}><a href="{% url 'user_created_organizations' username=user.username %}">Created</a></li>
+</ul>
+{% if request.user.is_authenticated and request.user.can_create_organization and subactive_page == 'created' %}
+<a href="{% url 'organizations_create' %}" class="btn btn-success">Create Your Organization</a>
+{% endif %}
+{% if subactive_page == 'subscribes' %}
+  {% include 'base/snippets/subscribes_organizations_list.html' with organizations=organizations %}
+{% elif subactive_page == 'created' %}
+  {% include 'base/snippets/created_organizations_list.html' with organizations=organizations %}
+{% endif %}
+{% endblock %}

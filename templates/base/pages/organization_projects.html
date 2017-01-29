@@ -1,0 +1,9 @@
+{% extends 'base/layouts/main.html' %}
+
+{% block content %}
+
+{% include 'base/snippets/organization/organization_header.html' with active_page='projects'  %}
+
+{% include 'base/snippets/projects_list.html' with projects=projects %}
+
+{% endblock %}

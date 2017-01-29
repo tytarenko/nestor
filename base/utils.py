@@ -5,12 +5,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 
-
 from .models import User, Category
 
 
 def paginator(objects, request):
-    paginate = Paginator(objects, settings.PUBLICATIONS_PER_PAGE)
+    paginate = Paginator(objects, settings.OBJECT_PER_PAGE)
     page = request.GET.get('page')
     try:
         result = paginate.page(page)
@@ -28,29 +27,30 @@ def sidebar():
     return {'categories': categories}
 
 
-def recalc_users_rating():
+def recalculate_users_rating():
     users = User.objects.filter(groups__name__in=['author', 'moderator', 'admin'])
     for user in users:
-        user_profile = user.userprofile
-        authority = user_profile.authority * settings.AUTHORITY_SCORE
+        authority = user.authority * settings.AUTHORITY_SCORE
         publications_rating = sum(user.publications.values_list('rating', flat=True)) * settings.TOPIC_SCORE
         comments_rating = sum(user.comments.values_list('rating', flat=True)) * settings.COMMENT_SCORE
-        user_profile.rating = authority + publications_rating + comments_rating
-        user_profile.save()
+        user.rating = authority + publications_rating + comments_rating
+        user.save()
 
 
-def recalc_publication_rating(publication):
+def recalculate_publication_rating(publication):
     publications_voices = publication.publications_voices.all()
     publications_voices.values_list('voice', flat=True)
     publication.rating = sum(publications_voices.values_list('voice', flat=True))
     publication.save()
+    return publication.rating
 
 
-def recalc_comment_rating(comment):
+def recalculate_comment_rating(comment):
     comments_voices = comment.comments_voices.all()
     comments_voices.values_list('voice', flat=True)
     comment.rating = sum(comments_voices.values_list('voice', flat=True))
     comment.save()
+    return comment.rating
 
 
 def get_best_comments(comments):
@@ -66,8 +66,8 @@ def get_best_comments(comments):
     return comment,
 
 
-def generate_hashcode(datetime):
-    timestamp_with_salt = '{}_{}'.format(datetime.timestamp(), settings.REGISTRATION_SALT)
+def generate_hashcode(username, datetime):
+    timestamp_with_salt = '{}_{}_{}'.format(username, datetime.timestamp(), settings.REGISTRATION_SALT)
     return md5(timestamp_with_salt.encode('utf-8')).hexdigest()
 
 
@@ -77,3 +77,9 @@ def send_registration_mail(email, hashcode, username):
     text = render_to_string('emails/reg.txt', cxt)
     html = render_to_string('emails/reg.html', cxt)
     send_mail('Finishing registration', text, 'test@mail.com', [email], html_message=html)
+
+
+def get_username(email):
+    username, _ = email.split('@')
+    username = username.replace('.', '_')
+    return username

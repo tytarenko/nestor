@@ -1,0 +1,14 @@
+<ul>
+{% for project in projects %}
+    <li><a href="{% url 'project' slug=project.slug %}">{{ project.title }}</a>
+    {% if request.user.is_authenticated and project.founder == request.user %}
+        {% if project.is_active %}
+        <a href="{% url 'project_edit' slug=project.slug %}" class="btn btn-warning">Edit</a>
+        <a href="{% url 'project_delete' slug=project.slug %}" class="btn btn-danger">Delete</a>
+        {% else %}
+        <a href="{% url 'project_restore' slug=project.slug %}" class="btn btn-primary">Restore</a>
+        {% endif %}
+    {% endif %}
+    </li>
+{% endfor %}
+</ul>

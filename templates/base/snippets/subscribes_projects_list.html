@@ -1,0 +1,20 @@
+<ul>
+{% for project in projects %}
+    <li><a href="{% url 'project' slug=project.slug %}">{{ project.title }}</a>
+    {% if request.user.is_authenticated %}
+        {% if project.founder != request.user %}
+            {% if request.user not in project.subscriber.all %}
+            <a href="{% url 'subscribe_project' slug=project.slug %}" class="btn btn-success">Subscribe</a>
+            {% else %}
+            <a href="{% url 'unsubscribe_project' slug=project.slug %}" class="btn btn-info">Unsubscribe</a>
+            {% endif %}
+        {% else %}
+            {% if project.is_active %}
+            <a href="{% url 'project_edit' slug=project.slug %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'project_delete' slug=project.slug %}" class="btn btn-danger">Delete</a>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+    </li>
+{% endfor %}
+</ul>

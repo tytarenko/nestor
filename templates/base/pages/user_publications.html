@@ -4,13 +4,11 @@
 {% block content %}
 
 {% include 'base/snippets/user_profile_head.html' with active_page='publications' %}
-
 <ul class="nav nav-pills">
   <li role="presentation" {% if subactive_page == 'in_published' %}class="active"{% endif %}><a href="{% url 'user_publications' username=user.username %}">In published</a></li>
   <li role="presentation" {% if subactive_page == 'draft' %}class="active"{% endif %}><a href="{% url 'user_publications_drafts' username=user.username %}">Drafts</a></li>
-
 </ul>
 
-{% include 'base/snippets/publications.html' %}
+{% include 'base/snippets/user_publications.html' %}
 
 {% endblock %}

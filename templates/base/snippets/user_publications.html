@@ -1,0 +1,26 @@
+{% block content %}
+    <ul class="list-unstyled">
+    {% for publication in publications %}
+        <li>
+        <div>
+            <p class="text-muted">{{ publication.created_at }}</p>
+            <h2>
+                <a href="{% url 'publication' publication_id=publication.id %}">{{ publication.title }}</a>
+                {% if request.user.is_authenticated and publication.author == request.user %}
+                <a href="{% url 'publication_edit' publication_id=publication.id username=publication.author.username  %}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></a>
+                {% endif %}
+            </h2>
+            <p>{% include 'base/snippets/publication_categories.html' with categories=publication.categories.all %}</p>
+            <p>{% include 'base/snippets/publication_tags.html' with tags=publication.tags.all %}</p>
+            <p>{{ publication.short_description }}</p>
+            <p>
+                <a href="{% url 'user_profile' username=publication.author.username %}">{{ publication.author.get_full_name }}</a>
+                <a href="{% url 'publication' publication_id=publication.id %}#comments"><span class="glyphicon glyphicon-comment" aria-hidden="true"></span> Comments({{ publication.comments.count }})</a>
+                <span class="label label-{% if publication.rating > 0 %}success{% elif publication.rating == 0 %}default{% else %}danger{% endif %} pull-right">{{ publication.rating }}</span>
+            </p>
+        </div>
+        </li>
+    {% endfor %}
+    </ul>
+    {% include 'base/navigation/page_navigation.html' with pages=publications %}
+{% endblock %}
